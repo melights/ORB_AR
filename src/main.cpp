@@ -15,6 +15,7 @@ GLFWwindow* window;
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 using namespace glm;
 using namespace cv;
@@ -27,8 +28,44 @@ using namespace cv;
 #include "orb_slam.h"
 #include "planar_tracking.h"
 
-VideoCapture cap_left(0);
-VideoCapture cap_right(2);
+//VideoCapture cap_left("/home/long/data/scale/left.avi");
+ VideoCapture cap_left(1);
+ void drawAxis(float size)
+{
+    glDepthFunc(GL_ALWAYS);     // to avoid visual artifacts with grid lines
+    glDisable(GL_LIGHTING);
+
+    // draw axis
+    glLineWidth(3);
+    glBegin(GL_LINES);
+        glColor3f(1, 0, 0);
+        glVertex3f(0, 0, 0);
+        glVertex3f(size, 0, 0);
+        glColor3f(0, 1, 0);
+        glVertex3f(0, 0, 0);
+        glVertex3f(0, size, 0);
+        glColor3f(0, 0, 1);
+        glVertex3f(0, 0, 0);
+        glVertex3f(0, 0, size);
+    glEnd();
+    glLineWidth(1);
+
+    // draw arrows(actually big square dots)
+    glPointSize(5);
+    glBegin(GL_POINTS);
+        glColor3f(1, 0, 0);
+        glVertex3f(size, 0, 0);
+        glColor3f(0, 1, 0);
+        glVertex3f(0, size, 0);
+        glColor3f(0, 0, 1);
+        glVertex3f(0, 0, size);
+    glEnd();
+    glPointSize(1);
+
+    // restore default settings
+    glEnable(GL_LIGHTING);
+    glDepthFunc(GL_LEQUAL);
+}
 
 int main( void )
 {
@@ -37,16 +74,16 @@ int main( void )
 
     cap_left.set(CV_CAP_PROP_FRAME_WIDTH, 640);
     cap_left.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
-    cap_right.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-    cap_right.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+    // cap_right.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+    // cap_right.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
 
 
     // Initialise Tracking System
-    bool success = initTracking("Remap.xml", "Extrinsics.xml");
+    bool success = initTracking("../Remap.xml", "../Extrinsics.xml");
     Mat K = getCameraMatrix();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM("ORB_Vocabulary/ORBvoc.bin", "StereoCam.yaml", ORB_SLAM2::System::STEREO,false);
+    ORB_SLAM2::System SLAM("../ORB_Vocabulary/ORBvoc.bin", "../handheld.yaml", ORB_SLAM2::System::MONOCULAR);
 
     if (!success)
         return 0;
@@ -110,14 +147,14 @@ int main( void )
     glBindVertexArray(VertexArrayID);
 
     // Create and compile our GLSL program from the shaders
-    GLuint programID = LoadShaders( "Shaders/TransformVertexShader.vertexshader", "Shaders/TextureFragmentShader.fragmentshader" );
+    GLuint programID = LoadShaders( "../Shaders/TransformVertexShader.vertexshader", "../Shaders/TextureFragmentShader.fragmentshader" );
 
     // Get a handle for our "MVP" uniform
     GLint MatrixID = glGetUniformLocation(programID, "MVP");
 
     // Load the texture
     int width, height;
-    GLuint Texture = png_texture_load("SpongeBob/spongebob.png", &width, &height);
+    GLuint Texture = png_texture_load("../SpongeBob/spongebob.png", &width, &height);
     //GLuint Texture = loadDDS("uvmap.dds");
     //GLuint Texture1 = png_texture_load("1.png", &width, &height);
     //GLuint Texture1 = loadImg_opencv("1.png");
@@ -132,9 +169,8 @@ int main( void )
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals; // Won't be used at the moment.
-    loadOBJ("SpongeBob/spongebob.obj", vertices, uvs, normals);
+    loadOBJ("../SpongeBob/spongebob.obj", vertices, uvs, normals);
     //bool res = loadOBJ("cube.obj", vertices, uvs, normals);
-
     // Load it into a VBO
 
     GLuint vertexbuffer;
@@ -182,25 +218,25 @@ int main( void )
     bool slamMode = 0;
     //loadIntrinsics("temp/Intrinsics.xml", "temp/Distortion.xml");
 
-    Ptr<ORB> orb = ORB::create();
-    orb->setScoreType(cv::ORB::FAST_SCORE);
-    orb->setMaxFeatures(1000);
-    Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming(2)");
-    Tracker orb_tracker(orb, matcher, K);
-    //Tracker orb_tracker;
-    orb_tracker.setFirstFrame("first_frame.jpg", "engineering_bb.xml");
+    // Ptr<ORB> orb = ORB::create();
+    // orb->setScoreType(cv::ORB::FAST_SCORE);
+    // orb->setMaxFeatures(1000);
+    // Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming(2)");
+    // Tracker orb_tracker(orb, matcher, K);
+    // //Tracker orb_tracker;
+    // orb_tracker.setFirstFrame("first_frame.jpg", "engineering_bb.xml");
 
     do{
 
         cap_left.grab();
-        cap_right.grab();
+        // cap_right.grab();
         cap_left.retrieve(frame_left);
-        cap_right.retrieve(frame_right);
+        // cap_right.retrieve(frame_right);
 
         //cap_left >> frame_left;
         //cap_right >> frame_right;
 
-        stereoRemap(frame_left, frame_right, frame_left_rectified, frame_right_rectified);
+        //stereoRemap(frame_left, frame_right, frame_left_rectified, frame_right_rectified);
 
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -226,7 +262,7 @@ int main( void )
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
         glDisable(GL_DEPTH_TEST);
-
+drawAxis(10);
         // 1rst attribute buffer : vertices
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, cubebuffer);
@@ -262,8 +298,8 @@ int main( void )
 
 
         //success = TryInitModelMatrix(frame_left, slamMode);
-        success = orb_tracker.process(frame_left_rectified, slamMode);
-
+        // success = orb_tracker.process(frame_left_rectified, slamMode);
+success=1;
         if (!success){
             glfwPollEvents();
             if (glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
@@ -297,7 +333,7 @@ int main( void )
         if (!slamMode)
             ViewMatrix = getViewMatrix(slamMode);
         else{
-            Mat CameraPose = SLAM.TrackStereo(frame_left_rectified, frame_right_rectified, 1);
+            Mat CameraPose = SLAM.TrackMonocular(frame_left, 1);
             trackStereo(CameraPose);
             ViewMatrix = getViewMatrix(slamMode);
         }
@@ -316,7 +352,7 @@ int main( void )
         glm::mat4 ModelMatrix = getModelMatrix();
 
         //glm::mat4 initModelMatrix = getInitModelMatrix();
-        glm::mat4 initModelMatrix = orb_tracker.getInitModelMatrix();
+        // glm::mat4 initModelMatrix = orb_tracker.getInitModelMatrix();
 
         //glm::mat4 ModelMatrix, ScalingMatrix;
         //ModelMatrix = glm::mat4(1.0);
@@ -326,13 +362,21 @@ int main( void )
 
         //ScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f));
 
-
+cv::Mat RR=cv::Mat::eye(4, 4, CV_64F);
+ RR.at<double>(2, 3) = 100.0f;
+ RR.convertTo(RR, CV_32F);
+glm::mat4 initModelMatrix;
+     for (int i = 0; i < 4; i++){
+        for (int j = 0; j < 4; j++) {
+            initModelMatrix[i][j] = RR.at<float>(j,i);
+        }
+    }
 
 
          MVP = ProjectionMatrix * ViewMatrix * initModelMatrix * ModelMatrix;
         //MVP = ProjectionMatrix * ViewMatrix * initModelMatrix;
-        //MVP = ProjectionMatrix * initModelMatrix * ModelMatrix;
-
+       //MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+std::cout<<glm::to_string(ViewMatrix)<<std::endl;
         glEnable(GL_DEPTH_TEST);
 
         // Send our transformation to the currently bound shader,

@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(BOB_AR)
 
-set(CMAKE_BUILD_TYPE Debug)
-
 set(CMAKE_MODULE_PATH /home/long/ORB_AR/cmake_modules)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/temp)

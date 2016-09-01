@@ -21,15 +21,15 @@ glm::mat4 getProjectionMatrix(){
 	return ProjectionMatrix;
 }
 
-
+glm::vec3 position = glm::vec3( 0, 0, 5 ); 
 float scale_factor = 1;
 float rotation = 0;
 
 // Initial Field of View
 float initialFoV = 45.0f;
 
-float speed = 3.0f; // 3 units / second
-float rotate_speed = 90.0f;
+float speed = 1.0f; // 3 units / second
+float rotate_speed = 1000.0f;
 
 
 
@@ -69,7 +69,7 @@ void computeMatricesFromInputs(){
 
 	// Model matrix
     ModelMatrix = glm::rotate(ModelMatrix, glm::radians(rotation), glm::vec3( 0, 1, 0));
-    TranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(3.5,3,0));
+    TranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,0));
     ScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale_factor));
     ModelMatrix = TranslateMatrix * ModelMatrix * ScalingMatrix;
 

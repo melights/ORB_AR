@@ -13,7 +13,9 @@ using namespace std;
 using namespace cv;
 
 Mat map11, map12, map21, map22, RCalib, TCalib, P1, P2, K;
-Mat R, tvec, initRvec, initTvec;
+Mat initRvec, initTvec;
+Mat R=Mat::eye(4, 4, CV_64F);
+Mat tvec(4, 4, CV_64FC1);
 cv::Mat cvToGl = cv::Mat::zeros(4, 4, CV_64F);
 
 Mat getCameraMatrix(){
@@ -102,7 +104,7 @@ bool initTracking(const char * Remap_path, const char * Extrinsics_path){
     cvToGl.at<double>(2, 2) = -1.0f;
 // invert the z axis
     cvToGl.at<double>(3, 3) = 1.0f;
-
+//    cvToGl.at<double>(2, 3) = -20.0f;
 
     cv::FileStorage f1,f2;
     f1.open(Remap_path, cv::FileStorage::READ);
