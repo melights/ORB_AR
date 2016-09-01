@@ -52,7 +52,6 @@ set( ADDITIONAL_LIBS
      -lXxf86vm
      -lXi
      -lXcursor
-     -ldl
 )
 
 set(SOURCE_FILES

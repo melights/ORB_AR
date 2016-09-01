@@ -27,8 +27,8 @@ using namespace cv;
 #include "orb_slam.h"
 #include "planar_tracking.h"
 
-VideoCapture cap_left(0);
-VideoCapture cap_right(2);
+VideoCapture cap_left(1);
+//VideoCapture cap_right(2);
 
 int main( void )
 {
@@ -37,16 +37,16 @@ int main( void )
 
     cap_left.set(CV_CAP_PROP_FRAME_WIDTH, 640);
     cap_left.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
-    cap_right.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-    cap_right.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+    // cap_right.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+    // cap_right.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
 
 
     // Initialise Tracking System
-    bool success = initTracking("Remap.xml", "Extrinsics.xml");
+    bool success = initTracking("../Remap.xml", "../Extrinsics.xml");
     Mat K = getCameraMatrix();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM("ORB_Vocabulary/ORBvoc.bin", "StereoCam.yaml", ORB_SLAM2::System::STEREO,false);
+    ORB_SLAM2::System SLAM("../ORB_Vocabulary/ORBvoc.bin", "/home/long/ORB_AR/handheld.yaml", ORB_SLAM2::System::MONOCULAR);
 
     if (!success)
         return 0;
@@ -110,14 +110,14 @@ int main( void )
     glBindVertexArray(VertexArrayID);
 
     // Create and compile our GLSL program from the shaders
-    GLuint programID = LoadShaders( "Shaders/TransformVertexShader.vertexshader", "Shaders/TextureFragmentShader.fragmentshader" );
+    GLuint programID = LoadShaders( "../Shaders/TransformVertexShader.vertexshader", "../Shaders/TextureFragmentShader.fragmentshader" );
 
     // Get a handle for our "MVP" uniform
     GLint MatrixID = glGetUniformLocation(programID, "MVP");
 
     // Load the texture
     int width, height;
-    GLuint Texture = png_texture_load("SpongeBob/spongebob.png", &width, &height);
+    GLuint Texture = png_texture_load("../SpongeBob/spongebob.png", &width, &height);
     //GLuint Texture = loadDDS("uvmap.dds");
     //GLuint Texture1 = png_texture_load("1.png", &width, &height);
     //GLuint Texture1 = loadImg_opencv("1.png");
@@ -132,7 +132,7 @@ int main( void )
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals; // Won't be used at the moment.
-    loadOBJ("SpongeBob/spongebob.obj", vertices, uvs, normals);
+    loadOBJ("../SpongeBob/spongebob.obj", vertices, uvs, normals);
     //bool res = loadOBJ("cube.obj", vertices, uvs, normals);
 
     // Load it into a VBO
@@ -188,19 +188,19 @@ int main( void )
     Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming(2)");
     Tracker orb_tracker(orb, matcher, K);
     //Tracker orb_tracker;
-    orb_tracker.setFirstFrame("first_frame.jpg", "engineering_bb.xml");
+    orb_tracker.setFirstFrame("../card.png", "../engineering_bb.xml");
 
     do{
 
         cap_left.grab();
-        cap_right.grab();
+        // cap_right.grab();
         cap_left.retrieve(frame_left);
-        cap_right.retrieve(frame_right);
+        // cap_right.retrieve(frame_right);
 
         //cap_left >> frame_left;
-        //cap_right >> frame_right;
+        // cap_right >> frame_right;
 
-        stereoRemap(frame_left, frame_right, frame_left_rectified, frame_right_rectified);
+        // stereoRemap(frame_left, frame_right, frame_left_rectified, frame_right_rectified);
 
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -297,7 +297,7 @@ int main( void )
         if (!slamMode)
             ViewMatrix = getViewMatrix(slamMode);
         else{
-            Mat CameraPose = SLAM.TrackStereo(frame_left_rectified, frame_right_rectified, 1);
+            Mat CameraPose = SLAM.TrackMonocular(frame_left, 1);
             trackStereo(CameraPose);
             ViewMatrix = getViewMatrix(slamMode);
         }
