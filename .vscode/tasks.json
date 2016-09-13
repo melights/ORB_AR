@@ -1,0 +1,24 @@
+{ "version": "0.1.0"
+, "command": "sh"
+, "isShellCommand": true
+, "showOutput": "always"
+, "args": [ "-c" ]
+, "tasks":
+  [ { "taskName": "la"
+    , "suppressTaskName": true
+    , "args": [ "\"ls -la\"" ]
+    }
+  , { "taskName": "hoge"
+    , "suppressTaskName": true
+    , "args": [ "\"echo hoge\"" ]
+    }
+  , { "taskName": "build"
+    , "suppressTaskName": true
+    , "args": [ "cd build && make" ]
+    }
+  , { "taskName": "debug"
+    , "suppressTaskName": true
+    , "args": [ "\"cd build; gdb bin/my-executable\"" ]
+    }
+  ]
+}

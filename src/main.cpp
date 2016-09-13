@@ -30,42 +30,6 @@ using namespace cv;
 
 //VideoCapture cap_left("/home/long/data/scale/left.avi");
  VideoCapture cap_left(1);
- void drawAxis(float size)
-{
-    glDepthFunc(GL_ALWAYS);     // to avoid visual artifacts with grid lines
-    glDisable(GL_LIGHTING);
-
-    // draw axis
-    glLineWidth(3);
-    glBegin(GL_LINES);
-        glColor3f(1, 0, 0);
-        glVertex3f(0, 0, 0);
-        glVertex3f(size, 0, 0);
-        glColor3f(0, 1, 0);
-        glVertex3f(0, 0, 0);
-        glVertex3f(0, size, 0);
-        glColor3f(0, 0, 1);
-        glVertex3f(0, 0, 0);
-        glVertex3f(0, 0, size);
-    glEnd();
-    glLineWidth(1);
-
-    // draw arrows(actually big square dots)
-    glPointSize(5);
-    glBegin(GL_POINTS);
-        glColor3f(1, 0, 0);
-        glVertex3f(size, 0, 0);
-        glColor3f(0, 1, 0);
-        glVertex3f(0, size, 0);
-        glColor3f(0, 0, 1);
-        glVertex3f(0, 0, size);
-    glEnd();
-    glPointSize(1);
-
-    // restore default settings
-    glEnable(GL_LIGHTING);
-    glDepthFunc(GL_LEQUAL);
-}
 
 int main( void )
 {
@@ -158,10 +122,6 @@ int main( void )
     //GLuint Texture = loadDDS("uvmap.dds");
     //GLuint Texture1 = png_texture_load("1.png", &width, &height);
     //GLuint Texture1 = loadImg_opencv("1.png");
-    GLuint Texture1;
-    glGenTextures(1, &Texture1);
-
-
     // Get a handle for our "myTextureSampler" uniform
     GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
 
@@ -172,6 +132,10 @@ int main( void )
     loadOBJ("../SpongeBob/spongebob.obj", vertices, uvs, normals);
     //bool res = loadOBJ("cube.obj", vertices, uvs, normals);
     // Load it into a VBO
+
+
+    GLuint Texture1;
+    glGenTextures(1, &Texture1);
 
     GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
@@ -260,9 +224,9 @@ int main( void )
         //ScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
         glm::mat4 MVP = glm::mat4(1.0);
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
+        
         glDisable(GL_DEPTH_TEST);
-drawAxis(10);
+
         // 1rst attribute buffer : vertices
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, cubebuffer);
@@ -329,6 +293,10 @@ success=1;
 
         //std::cout << 1 << std::endl;
 
+
+
+
+
         glm::mat4 ViewMatrix;
         if (!slamMode)
             ViewMatrix = getViewMatrix(slamMode);
@@ -363,7 +331,13 @@ success=1;
         //ScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f));
 
 cv::Mat RR=cv::Mat::eye(4, 4, CV_64F);
- RR.at<double>(2, 3) = 100.0f;
+    RR.at<double>(0, 0) = 1.0f;
+    RR.at<double>(1, 1) = -1.0f;
+// Invert the y axis
+    RR.at<double>(2, 2) = -1.0f;
+// invert the z axis
+    RR.at<double>(3, 3) = 1.0f;
+ //RR.at<double>(2, 3) = 20.0f;
  RR.convertTo(RR, CV_32F);
 glm::mat4 initModelMatrix;
      for (int i = 0; i < 4; i++){
@@ -372,11 +346,16 @@ glm::mat4 initModelMatrix;
         }
     }
 
-
-         MVP = ProjectionMatrix * ViewMatrix * initModelMatrix * ModelMatrix;
+//MVP = ProjectionMatrix * ModelMatrix * ViewMatrix;
+        //MVP = ProjectionMatrix * ViewMatrix * initModelMatrix * ModelMatrix;
         //MVP = ProjectionMatrix * ViewMatrix * initModelMatrix;
-       //MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-std::cout<<glm::to_string(ViewMatrix)<<std::endl;
+       MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL ) == GLFW_PRESS)
+  std::cout<<glm::to_string(ProjectionMatrix)<<std::endl;
+if (glfwGetKey(window, GLFW_KEY_LEFT_ALT ) == GLFW_PRESS)
+  std::cout<<glm::to_string(ModelMatrix)<<std::endl;
+if (glfwGetKey(window, GLFW_KEY_SPACE ) == GLFW_PRESS)
+  std::cout<<glm::to_string(ViewMatrix)<<std::endl;
         glEnable(GL_DEPTH_TEST);
 
         // Send our transformation to the currently bound shader,
@@ -418,7 +397,7 @@ std::cout<<glm::to_string(ViewMatrix)<<std::endl;
         // Draw the triangle !
         glDrawArrays(GL_TRIANGLES, 0, vertices.size() );
 
-
+//////////////////////////////////////////////////////////////////////////
 
         /*width = 640*16/9-1;
         height = 480*16/9-1;

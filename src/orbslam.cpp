@@ -14,13 +14,21 @@ using namespace cv;
 
 Mat map11, map12, map21, map22, RCalib, TCalib, P1, P2, K;
 Mat initRvec, initTvec;
-Mat R=Mat::eye(4, 4, CV_64F);
-Mat tvec(4, 4, CV_64FC1);
-cv::Mat cvToGl = cv::Mat::zeros(4, 4, CV_64F);
+Mat R=Mat::eye(4, 4, CV_32F);
+Mat tvec = cv::Mat::zeros(4, 1, CV_32F);
+cv::Mat cvToGl = cv::Mat::zeros(4, 4, CV_32F);
 
 Mat getCameraMatrix(){
     return K;
 }
+
+void InitMat(Mat& m,float* num)
+{
+ for(int i=0;i<m.rows;i++)
+  for(int j=0;j<m.cols;j++)
+   m.at<float>(i,j)=*(num+i*m.rows+j);
+}
+
 
 void stereoRemap(Mat frame_left, Mat frame_right, Mat& frame_left_rectified, Mat& frame_right_rectified){
 
@@ -31,36 +39,59 @@ void stereoRemap(Mat frame_left, Mat frame_right, Mat& frame_left_rectified, Mat
 
 glm::mat4 getViewMatrix(bool slamMode){
     glm::mat4 V;
-    Mat viewMatrix = cv::Mat::zeros(4, 4, CV_64FC1);
+    Mat viewMatrix = cv::Mat::zeros(4, 4, CV_32F);
 
     if (slamMode){
-        R.convertTo(R, CV_64F);
-        tvec.convertTo(tvec, CV_64F);
 
-        for(unsigned int row=0; row<3; ++row)
-        {
-            for(unsigned int col=0; col<3; ++col)
-            {
-                viewMatrix.at<double>(row, col) = R.at<double>(row, col);
-            }
-            viewMatrix.at<double>(row, 3) = tvec.at<double>(row, 0);
-        }
-        viewMatrix.at<double>(3, 3) = 1.0f;
 
-        viewMatrix = cvToGl * viewMatrix;
+        // for(unsigned int row=0; row<3; ++row)
+        // {
+        //     for(unsigned int col=0; col<3; ++col)
+        //     {
+        //         viewMatrix.at<double>(row, col) = R.at<double>(row, col);
+        //     }
+        //     viewMatrix.at<double>(row, 3) = tvec.at<double>(row, 0);
+        // }
+        // viewMatrix.at<double>(3, 3) = 1.0f;
+
+        // viewMatrix = cvToGl * viewMatrix;
+            float qx,qy,qz,qw;
+    qw = sqrt(1.0 + R.at<float>(0,0) + R.at<float>(1,1) + R.at<float>(2,2)) / 2.0;
+    qx = (R.at<float>(2,1) - R.at<float>(1,2)) / (4*qw) ;
+    qy = -(R.at<float>(0,2) - R.at<float>(2,0)) / (4*qw) ;
+    qz = -(R.at<float>(1,0) - R.at<float>(0,1)) / (4*qw) ;
+
+
+float m0[]={1 - 2*qy*qy - 2*qz*qz, 2*qx*qy + 2*qz*qw, 2*qx*qz - 2*qy*qw, 0, 2*qx*qy - 2*qz*qw, 1 - 2*qx*qx - 2*qz*qz, 2*qy*qz + 2*qx*qw, 0, 2*qx*qz + 2*qy*qw, 2*qy*qz - 2*qx*qw, 1 - 2*qx*qx - 2*qy*qy, 0, tvec.at<float>(0, 0), -tvec.at<float>(1, 0), -tvec.at<float>(2, 0), 1};
+InitMat(viewMatrix, m0);
+
+
+
+
+
+
+
     } else{
         viewMatrix = cvToGl;
     }
 
-    viewMatrix.convertTo(viewMatrix, CV_32F);
+    // cv::Mat Rcw = viewMatrix.rowRange(0,3).colRange(0,3);
+    // cv::Mat tcw = viewMatrix.rowRange(0,3).col(3);
+    // cv::Mat Rwc = Rcw.t();
+    // cv::Mat Ow = -Rwc*tcw;
+
+    // cv::Mat Twc = cv::Mat::eye(4,4,viewMatrix.type());
+    // Rwc.copyTo(Twc.rowRange(0,3).colRange(0,3));
+    // Ow.copyTo(Twc.rowRange(0,3).col(3));
 
 
     for (int i = 0; i < 4; i++){
         for (int j = 0; j < 4; j++) {
-            V[i][j] = viewMatrix.at<float>(j,i);
+            V[i][j] = viewMatrix.at<float>(i,j);
         }
     }
-
+glm::mat4 myScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1));;
+V=V*myScalingMatrix;
     return V;
 
 
@@ -69,7 +100,7 @@ glm::mat4 getViewMatrix(bool slamMode){
 glm::mat4 getInitModelMatrix(){
     glm::mat4 initModelMatrix;
     Mat initR;
-    Mat viewMatrix = cv::Mat::zeros(4, 4, CV_64FC1);
+    Mat viewMatrix = cv::Mat::zeros(4, 4, CV_32F);
     Rodrigues(initRvec, initR);
 
     for(unsigned int row=0; row<3; ++row)
@@ -104,7 +135,7 @@ bool initTracking(const char * Remap_path, const char * Extrinsics_path){
     cvToGl.at<double>(2, 2) = -1.0f;
 // invert the z axis
     cvToGl.at<double>(3, 3) = 1.0f;
-//    cvToGl.at<double>(2, 3) = -20.0f;
+   //cvToGl.at<double>(2, 3) = -10.0f;
 
     cv::FileStorage f1,f2;
     f1.open(Remap_path, cv::FileStorage::READ);

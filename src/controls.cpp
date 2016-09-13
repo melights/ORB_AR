@@ -22,15 +22,15 @@ glm::mat4 getProjectionMatrix(){
 }
 
 glm::vec3 position = glm::vec3( 0, 0, 5 ); 
-float scale_factor = 1;
+float scale_factor = 0.1;
 float rotation = 0;
-
+float depth = -11;
 // Initial Field of View
 float initialFoV = 45.0f;
 
 float speed = 1.0f; // 3 units / second
 float rotate_speed = 1000.0f;
-
+float depth_speed = 1;
 
 
 void computeMatricesFromInputs(){
@@ -55,21 +55,21 @@ void computeMatricesFromInputs(){
 	}
 	// Strafe right
 	if (glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS){
-		rotation += deltaTime * rotate_speed;
+		depth += deltaTime * depth_speed;
 	}
 	// Strafe left
 	if (glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS){
-        rotation -= deltaTime * rotate_speed;
+        depth -= deltaTime * depth_speed;
 	}
 
 	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
 
 	// Projection matrix : 45� Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(glm::radians(61.5f), 4.0f / 3.0f, 0.1f, 100.0f);
+	ProjectionMatrix = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
 
 	// Model matrix
-    ModelMatrix = glm::rotate(ModelMatrix, glm::radians(rotation), glm::vec3( 0, 1, 0));
-    TranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,0));
+    ModelMatrix = glm::rotate(glm::mat4(1.0), glm::radians(rotation), glm::vec3( 0, 1, 0));
+    TranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,depth));
     ScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale_factor));
     ModelMatrix = TranslateMatrix * ModelMatrix * ScalingMatrix;
 
