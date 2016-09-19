@@ -36,7 +36,14 @@ glm::mat4 Tracker::getInitModelMatrix(){
     }
     viewMatrix.at<double>(3, 3) = 1.0f;
 
-    //viewMatrix = cvToGl * viewMatrix;
+// cv::Mat cvToGl = cv::Mat::zeros(4, 4, CV_64F);
+//     cvToGl.at<double>(0, 0) = 1.0f;
+//     cvToGl.at<double>(1, 1) = -1.0f;
+// // Invert the y axis
+//     cvToGl.at<double>(2, 2) = -1.0f;
+// // invert the z axis
+//     cvToGl.at<double>(3, 3) = 1.0f;
+//     viewMatrix = cvToGl * viewMatrix;
 
     viewMatrix.convertTo(viewMatrix, CV_32F);
 
@@ -57,9 +64,9 @@ void Tracker::setFirstFrame(const char * first_frame_path, const char * bb_path)
     vector<KeyPoint> kp;
 
     object_bb.push_back(Point2f(0,0));
-    object_bb.push_back(Point2f(8,0));
-    object_bb.push_back(Point2f(8,6));
-    object_bb.push_back(Point2f(0,6));
+    object_bb.push_back(Point2f(0.4,0));
+    object_bb.push_back(Point2f(0.4,0.3));
+    object_bb.push_back(Point2f(0,0.3));
 
     vector<Point2f> bb;
          FileStorage fs(bb_path, FileStorage::READ);
@@ -72,7 +79,7 @@ void Tracker::setFirstFrame(const char * first_frame_path, const char * bb_path)
     H = findHomography(bb, object_bb);
 
     detector->detectAndCompute(first_frame, noArray(), kp, first_desc);
-
+cout << H << endl << endl;
     vector<Point2f> tmp_kp_orgn, tmp_kp_homo;
 
     first_kp = kp;
@@ -83,7 +90,7 @@ void Tracker::setFirstFrame(const char * first_frame_path, const char * bb_path)
 
     perspectiveTransform(tmp_kp_orgn, tmp_kp_homo, H);
 
-    for (int i = 0; i <= kp.size(); i++) {
+    for (int i = 0; i < kp.size(); i++) {
         first_kp[i].pt = tmp_kp_homo[i];
     }
 
@@ -114,12 +121,13 @@ bool Tracker::process(const Mat frame_left_rectified, bool slamMode)
 
     Mat inlier_mask, homography;
 
-    if(matched1.size() >= 20) {
+std::cout<<matched1.size()<<std::endl;
+    if(matched1.size() >= 30) {
         homography = findHomography(Points(matched1), Points(matched2),
                                     RANSAC, ransac_thresh, inlier_mask);
     }
 
-    if(matched1.size() < 20 || homography.empty()) {
+    if(matched1.size() < 30 || homography.empty()) {
         return 0;
     }
 
@@ -133,6 +141,6 @@ bool Tracker::process(const Mat frame_left_rectified, bool slamMode)
 
     //solvePnPRansac(ObjectPoints, ImagePoints_1, CameraMatrix_1, DistCoeffs_1, rvec, tvec, true, 1000, 2.0, 0.99, inlier_mask, SOLVEPNP_ITERATIVE);
     solvePnP(ObjectPoints, ImagePoints, K, noArray(), rvec, tvec);
-
+    cout<<"success!!";
     return 1;
 }

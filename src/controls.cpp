@@ -69,7 +69,7 @@ void computeMatricesFromInputs(){
 
 	// Model matrix
     ModelMatrix = glm::rotate(ModelMatrix, glm::radians(rotation), glm::vec3( 0, 1, 0));
-    TranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(3.5,3,0));
+    TranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0,0,0));
     ScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale_factor));
     ModelMatrix = TranslateMatrix * ModelMatrix * ScalingMatrix;
 

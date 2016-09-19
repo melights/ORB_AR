@@ -13,7 +13,9 @@ using namespace std;
 using namespace cv;
 
 Mat map11, map12, map21, map22, RCalib, TCalib, P1, P2, K;
-Mat R, tvec, initRvec, initTvec;
+Mat initRvec, initTvec;
+Mat R=Mat::eye(4, 4, CV_32F);
+Mat tvec = cv::Mat::zeros(4, 1, CV_32F);
 cv::Mat cvToGl = cv::Mat::zeros(4, 4, CV_64F);
 
 Mat getCameraMatrix(){
@@ -64,35 +66,35 @@ glm::mat4 getViewMatrix(bool slamMode){
 
 }
 
-glm::mat4 getInitModelMatrix(){
-    glm::mat4 initModelMatrix;
-    Mat initR;
-    Mat viewMatrix = cv::Mat::zeros(4, 4, CV_64FC1);
-    Rodrigues(initRvec, initR);
+// glm::mat4 getInitModelMatrix(){
+//     glm::mat4 initModelMatrix;
+//     Mat initR;
+//     Mat viewMatrix = cv::Mat::zeros(4, 4, CV_64FC1);
+//     Rodrigues(initRvec, initR);
 
-    for(unsigned int row=0; row<3; ++row)
-    {
-        for(unsigned int col=0; col<3; ++col)
-        {
-            viewMatrix.at<double>(row, col) = initR.at<double>(row, col);
-        }
-        viewMatrix.at<double>(row, 3) = initTvec.at<double>(row, 0);
-    }
-    viewMatrix.at<double>(3, 3) = 1.0f;
+//     for(unsigned int row=0; row<3; ++row)
+//     {
+//         for(unsigned int col=0; col<3; ++col)
+//         {
+//             viewMatrix.at<double>(row, col) = initR.at<double>(row, col);
+//         }
+//         viewMatrix.at<double>(row, 3) = initTvec.at<double>(row, 0);
+//     }
+//     viewMatrix.at<double>(3, 3) = 1.0f;
 
-    //viewMatrix = cvToGl * viewMatrix;
+//     //viewMatrix = cvToGl * viewMatrix;
 
-    viewMatrix.convertTo(viewMatrix, CV_32F);
+//     viewMatrix.convertTo(viewMatrix, CV_32F);
 
 
-    for (int i = 0; i < 4; i++){
-        for (int j = 0; j < 4; j++) {
-            initModelMatrix[i][j] = viewMatrix.at<float>(j,i);
-        }
-    }
+//     for (int i = 0; i < 4; i++){
+//         for (int j = 0; j < 4; j++) {
+//             initModelMatrix[i][j] = viewMatrix.at<float>(j,i);
+//         }
+//     }
 
-    return initModelMatrix;
-}
+//     return initModelMatrix;
+// }
 
 bool initTracking(const char * Remap_path, const char * Extrinsics_path){
 
@@ -141,35 +143,35 @@ bool trackStereo(Mat CameraPose){
     return 1;
 }
 
-bool TryInitModelMatrix(Mat frame_left, bool slamMode){
+// bool TryInitModelMatrix(Mat frame_left, bool slamMode){
 
-    if (slamMode)
-        return 1;
+//     if (slamMode)
+//         return 1;
 
-    Mat frame_left_rectified;
-    vector<cv::Point2f> ImagePoints_1;
-    vector<Point3f> ObjectPoints;
+//     Mat frame_left_rectified;
+//     vector<cv::Point2f> ImagePoints_1;
+//     vector<Point3f> ObjectPoints;
 
-    cv::Size ChessboardSize(8,6);
+//     cv::Size ChessboardSize(8,6);
 
-    for (int p = 0; p < ChessboardSize.height; p++) {
-        for (int q = 0; q < ChessboardSize.width; q++) {
-            ObjectPoints.push_back(Point3f(q,p,0));
-        }
-    }
-    bool found_left;
+//     for (int p = 0; p < ChessboardSize.height; p++) {
+//         for (int q = 0; q < ChessboardSize.width; q++) {
+//             ObjectPoints.push_back(Point3f(q,p,0));
+//         }
+//     }
+//     bool found_left;
 
 
-    remap(frame_left, frame_left_rectified, map11, map12, cv::INTER_LINEAR);
+//     remap(frame_left, frame_left_rectified, map11, map12, cv::INTER_LINEAR);
 
-    found_left = cv::findChessboardCorners(frame_left_rectified, ChessboardSize, ImagePoints_1, cv::CALIB_CB_FAST_CHECK);
+//     found_left = cv::findChessboardCorners(frame_left_rectified, ChessboardSize, ImagePoints_1, cv::CALIB_CB_FAST_CHECK);
 
-    if (found_left) {
+//     if (found_left) {
 
-        solvePnP(ObjectPoints, ImagePoints_1, K, noArray(), initRvec, initTvec);
+//         solvePnP(ObjectPoints, ImagePoints_1, K, noArray(), initRvec, initTvec);
 
-        return 1;
+//         return 1;
 
-    } else
-        return 0;
-}
+//     } else
+//         return 0;
+// }
